@@ -51,9 +51,7 @@ export abstract class AjaxDisplayObject extends DisplayObject {
 		this._data = data;
 	}
 
-	async update(param?: any) {
-		if (this._axio) {
-			let res = await this._axio.invoke(param);
-		}
+	update(param?: any) {
+		this.callApi(param);
 	}
 }
