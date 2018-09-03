@@ -8,12 +8,14 @@ export interface ListBoxConfig extends FormComponentConfig{
 }
 
 export class ListBox extends ListDisplayObject implements IFormComponent {
+    name :string;
+    private prependBlank:boolean;
 
     constructor(dom: HTMLElement, cfg: ListBoxConfig){
         super(dom, cfg);
 
-        const elementName = cfg.name || `Select_${Helper.componentUid()}`;
-        const prependBlank = !!cfg.prependBlank;
+        this.name = cfg.name || `Select_${Helper.componentUid()}`;
+        this.prependBlank = !!cfg.prependBlank;
     }
 
     get text():string {

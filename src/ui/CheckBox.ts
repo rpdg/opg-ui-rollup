@@ -5,11 +5,11 @@ import { ListDisplayObject} from "./ListDisplayObject";
 
 
 export class CheckBox extends ListDisplayObject implements IFormComponent {
+    name :string;
 
     constructor(dom: HTMLElement, cfg: FormComponentConfig){
         super(dom, cfg);
-
-        const elementName = cfg.name || `CheckBox_${Helper.componentUid()}`;
+        this.name = cfg.name || `CheckBox_${Helper.componentUid()}`;
     }
 
     get text():string[] {
