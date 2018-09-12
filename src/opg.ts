@@ -1,4 +1,4 @@
-import Sp from './ui/Sp';
+import Span from './ui/Span';
 import { AjaxDisplayObjectConfig } from './ui/AjaxDisplayObject';
 import { CheckBox } from './ui/CheckBox';
 import { FormComponentConfig } from './ui/IComponent';
@@ -33,8 +33,8 @@ class OpgUi {
 		return new CheckBox(this.dom, cfg);
 	}
 
-	sp(cfg: any): Sp {
-		return new Sp(this.dom, cfg);
+	span(cfg: any): Span {
+		return new Span(this.dom, cfg);
 	}
 
 }

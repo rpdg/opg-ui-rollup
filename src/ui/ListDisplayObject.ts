@@ -2,7 +2,7 @@ import { Is } from './../util/Helper';
 import { ApiInstance } from './../util/Ajax';
 import { AjaxDisplayObject, AjaxDisplayObjectConfig } from "./AjaxDisplayObject";
 import {bindList ,BindListOption} from '../util/BindList';
-import {deepExtend} from '../util/Helper';
+import {deepExtend , deepCloneArray} from '../util/Helper';
 import  ComponentEvents  from "./ComponentEvents";
 
 export interface ListDisplayObjectConfig extends AjaxDisplayObjectConfig {
@@ -14,8 +14,13 @@ export abstract class ListDisplayObject extends AjaxDisplayObject {
 	bindOpt: BindListOption = {
 		itemRender  : {}
 	};
+
 	constructor(dom: HTMLElement, cfg: ListDisplayObjectConfig) {
 		super(dom, cfg);
+		//this.bindOpt = deepExtend()
+	}
+
+	protected init(dom: HTMLElement, cfg: ListDisplayObjectConfig){
 		bindList(dom , this.bindOpt);
 	}
 
@@ -27,7 +32,7 @@ export abstract class ListDisplayObject extends AjaxDisplayObject {
 		return this._data;
 	}
 	set data(data: Array<any>) {
-		let arr = deepExtend({} , data);
+		let arr = deepCloneArray(data);
 		this.bind(arr);
 		this._data = arr;
 		this.trigger(ComponentEvents.dataBound, arr);

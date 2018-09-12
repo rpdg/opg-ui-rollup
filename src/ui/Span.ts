@@ -5,7 +5,7 @@ const defaults: Object = {
     text: "default string"
 };
 
-class Sp extends DisplayObject {
+class Span extends DisplayObject {
 
 	constructor(dom: HTMLElement,  cfg: any) {
         cfg = deepExtend({}, defaults, cfg);
@@ -14,4 +14,4 @@ class Sp extends DisplayObject {
 	}
 }
 
-export default Sp;
+export default Span;

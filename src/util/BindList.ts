@@ -51,13 +51,13 @@ function makeCache(sets: BindListOption) : BindCache{
             let _attr = rnderFns[fs].substr(2, rnderFns[fs].length - 3);
             let _ndex = _attr.indexOf(":=");
             let keyName = _attr.substr(0, _ndex);
-            renderEvalStr += `row['${_attr}']=scope['${_attr.substr(_ndex + 2)}'](row['${keyName}'] , i , row , '${keyName}');`;
+			renderEvalStr += "row['" + _attr + "']=scope['" + _attr.substr(_ndex + 2) + "'](row['" + keyName + "'] , i , row ,'" + keyName + "') ;";
         }
     }
 
     const pattern = /\${(\w*[:]*[=]*\w+)\}(?!})/g;
     const str = template.replace(pattern, function(match, key, i) {
-        return `'+((row['${key}']===null||row['${key}']===undefined||row['${key}']===Infinity)?'${nullShown}':row['${key}'])+`;        
+		return '\'+((row[\'' + key + '\']===null||row[\'' + key + '\']===undefined||Infinity===row[\'' + key + '\'])?\'' + nullShown + '\':row[\'' + key + '\'])+\'';
     });
 
     

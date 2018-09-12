@@ -3,7 +3,6 @@ import * as Helper from "../util/Helper";
 import { IFormComponent, FormComponentConfig } from "./IComponent";
 import { ListDisplayObject } from "./ListDisplayObject";
 import { bindList, BindListOption } from "../util/BindList";
-import {deepExtend} from '../util/Helper';
 import  ComponentEvents  from "./ComponentEvents";
 import AjaxForm from './Form';
 
@@ -11,19 +10,27 @@ export interface ListBoxConfig extends FormComponentConfig {
 	prependBlank?: boolean;
 }
 
+
 export class ListBox extends ListDisplayObject implements IFormComponent {
-	name: string = "";
-	private prependBlank: boolean = true;
+	name: string ;
+	private prependBlank: boolean ;
 
 	constructor(dom: HTMLElement, cfg: ListBoxConfig) {
-		super(dom, cfg);
+		super(dom,  cfg);
 	}
 
 	init(dom: HTMLElement, cfg: ListBoxConfig) {
-		this.name = cfg.name || `Select_${Helper.componentUid()}`;
-		this.prependBlank = !!cfg.prependBlank;
 
-		let bOpt: BindListOption = deepExtend(this.bindOpt , cfg.bindOpt) as BindListOption;
+        this.name = cfg.name || `Select_${Helper.componentUid()}`;
+        if(cfg.prependBlank === undefined){
+            this.prependBlank = true;
+        }
+        else{
+            this.prependBlank = !!cfg.prependBlank;
+        }
+		
+
+		let bOpt: BindListOption = Helper.deepExtend({} , cfg.bindOpt) as BindListOption;
 
 		if (!bOpt.itemRender) {
 			bOpt.itemRender = {};
@@ -50,9 +57,11 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
         }
         
         this.bindOpt = bOpt;
+
+        super.init(dom , cfg);
 	}
     set data(data: Array<any>) {
-        let arr: Array<any> = deepExtend({} , data);
+        let arr: Array<any> = Helper.deepCloneArray(data);
         if(this.prependBlank){
             arr.unshift({});
         }
