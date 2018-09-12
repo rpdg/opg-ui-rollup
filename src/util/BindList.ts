@@ -1,39 +1,46 @@
-import {componentUid} from './Helper'
+import {componentUid , Is} from './Helper'
 
 
-
-
-interface ItemRender {
-    [renderName :string] : (val :string , index ?:number , row ?:any , srcName ?:string)=>string
+export interface ItemRenderEntry{
+	(val :string , index ?:number , row ?:any , srcName ?:string): string
 }
-interface ItemFilter {
-    (row : any):boolean
+
+export interface ItemRender {
+    [renderName :string] : ItemRenderEntry
 }
-export interface bindListOption {
+export interface ItemFilter {
+    (row : any , index:number):any
+}
+
+export interface BindListOption {
 	list?: any[];
-    template?: string;
+    template ?: string;
     mode ?: string;
 	storeData?: boolean;
 	itemRender?: ItemRender;
 	itemFilter?: ItemFilter;
     nullShown?: string;
-    joiner ?: string;
+	joiner ?: string;
+	onBound ?: (list:Array<any> , sets :BindListOption)=>void
 }
+
 
 type BindCache = {
     name :string;
-    render : Function;
-    mode ?: string;
-	itemRender?: ItemRender;
-    itemFilter?: ItemFilter;
+    __render : Function;
+    mode : string;
+	itemRender ?: ItemRender;
+    itemFilter ?: ItemFilter;
     joiner : string;
+	onBound ?: (list:Array<any> , sets :BindListOption)=>void
 }
 
 interface IBoundHash {
     [renderName :string] : BindCache
 }
 
-function makeCache(sets: bindListOption){
+
+function makeCache(sets: BindListOption) : BindCache{
     let template = sets.template || '';
     const nullShown = sets.nullShown || "";
     const rnderFns = template.match(/\${\w+(:=)+\w+}/g);
@@ -59,11 +66,12 @@ function makeCache(sets: bindListOption){
     
     let cache :BindCache = { 
         name: template,
-        render : new Function("row", "i", "scope", renderEvalStr),
-        mode : sets.mode,
+        __render : new Function("row", "i", "scope", renderEvalStr),
+        mode : sets.mode || '',
         itemRender : sets.itemRender,
         itemFilter : sets.itemFilter,
-        joiner : sets.joiner || ''
+		joiner : sets.joiner || '',
+		onBound : sets.onBound 
     };
 
 	return cache;
@@ -88,77 +96,78 @@ const boundHash : IBoundHash = {
 // sets.mode     : append / prepend /after / before / and anyOther or undefined (default) is use html-replace
 // sets.onBound  : [event]
 // sets.joiner : 各个结果的连接字符，默认空
-// sets.storeData : 是否将过滤后的绑定数组保存于jq对象的data("bound-array")当中
 // set.nullShown : 将值为null的属性作何种显示，默认显示为empty string
-export const bindList = function(_this_: HTMLElement, sets: bindListOption) {
-	let cacheId = _this_.id || (function() {
-                                    _this_.id = componentUid().toString();
-                                    return _this_.id;
+export const bindList = function(elem: HTMLElement, sets: BindListOption|Array<object>) {
+	let cacheId = elem.id || (function() {
+                                    elem.id = componentUid().toString();
+                                    return elem.id;
                                 })();
 
-	var cache = boundCache[cacheId] || {},
-		template,
-		list,
-		itemRender,
-		itemFilter,
-		mode,
-		storeData,
-		storeArray;
+	let cache : BindCache = boundHash[cacheId] || {};
 
-	if (sets.push && sets.slice) {
-		// 当先前已经设定过template的时候，
-		// 可以只传入一个JSON list作参数以精简代码，
-		// 而且render/filter/mode/event 均依照最近一次设定
-		list = sets;
+	let template :string|undefined,
+		list : object[],
+		itemRender : ItemRender|undefined,
+		itemFilter :ItemFilter|undefined,
+		mode : string;
+
+	/*
+		当先前已经设定过template的时候，
+		可以只传入一个JSON list作参数以精简代码，
+		而且render/filter/mode/event 均依照最近一次设定
+	*/	
+	if (Is.Array(sets)) {
+		cache = boundHash[cacheId]; 
+		list = sets as object[];
+
 		itemRender = cache.itemRender;
 		itemFilter = cache.itemFilter;
 		mode = cache.mode;
-		storeData = cache.storeData;
-	} else {
-		template = sets.template;
+	}
+	else {
+		let _sets = <BindListOption> sets ;
+		template = _sets.template;
 
 		if (template !== undefined && cache["name"] != template) {
-			cache = boundCache.make(sets);
-			boundCache[cacheId] = cache;
+			cache = makeCache(_sets);
+			boundHash[cacheId] = cache;
 		}
 
-		list = sets.list;
-		if (!list || !list.length) list = [];
-		itemRender = sets.itemRender || cache.itemRender;
-		itemFilter = sets.itemFilter || cache.itemFilter;
-		mode = sets.mode || cache.mode;
-		storeData = !!sets.storeData;
+		list = _sets.list || [];
+
+		itemRender = _sets.itemRender || cache.itemRender;
+		itemFilter = _sets.itemFilter || cache.itemFilter;
+		mode = _sets.mode || cache.mode;
 	}
 
-	var scope = itemRender || sets.renderScope || window,
-		html = [],
-		i = 0,
+	let scope = itemRender || window,
+		htmlStrs = [],
 		nb = 0,
 		rowObject,
-		useFilter = typeof itemFilter === "function";
+		useFilter = (typeof itemFilter === "function");
 
-	if (storeData) storeArray = [];
 
-	for (; (rowObject = list[i]); ) {
+	for (let i=0 , l = list.length; i < l ; i++) {
+		rowObject = list[i];
+
 		//过滤data
-		if (useFilter) rowObject = itemFilter(rowObject, i);
+		if (useFilter) {
+			rowObject = (<ItemFilter> itemFilter)(rowObject, i);
+		}
 
 		//如果data没有被itemFilter过滤掉
 		if (rowObject) {
 			//行号
 			rowObject[":rowNum"] = ++nb;
 			//renderer
-			html[i] = cache["render"](rowObject, i, scope);
-			//如果要保存过滤后的对象数组
-			if (storeData) storeArray.push(rowObject);
+			htmlStrs[i] = cache["__render"](rowObject, i, scope);
 		}
-		++i;
-	}
-	this[mode || "html"](html.join(cache["joiner"]));
-	if (typeof cache.onBound === "function") {
-		cache.onBound.call(this, list, sets);
 	}
 
-	if (storeData) this.data("bound-array", storeArray);
-	return this;
+	elem.innerHTML = htmlStrs.join(cache.joiner);
+
+	if (typeof cache.onBound === "function") {
+		cache.onBound.call(elem, list, sets);
+	}
+
 };

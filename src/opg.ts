@@ -1,7 +1,7 @@
 import Sp from './ui/Sp';
 import { AjaxDisplayObjectConfig } from './ui/AjaxDisplayObject';
 import { CheckBox } from './ui/CheckBox';
-import { FormComponentConfig } from './ui/IFormComponent';
+import { FormComponentConfig } from './ui/IComponent';
 import { ListBox , ListBoxConfig} from './ui/ListBox';
 
 

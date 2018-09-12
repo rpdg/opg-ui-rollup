@@ -1,5 +1,5 @@
 import * as Helper from '../util/Helper';
-import { IFormComponent , FormComponentConfig} from "./IFormComponent";
+import { IFormComponent , FormComponentConfig} from "./IComponent";
 import { ListDisplayObject} from "./ListDisplayObject";
 
 

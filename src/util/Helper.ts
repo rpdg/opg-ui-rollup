@@ -1,4 +1,5 @@
 let seed = 0;
+
 export const componentUid = function(): number{
     return ++seed;
 }
@@ -45,7 +46,7 @@ function safeGetProperty(object: any, property: string) {
     return property === "__proto__" ? undefined : object[property];
 }
 
-export const deepExtend = function (...args: any[]) {
+export const deepExtend = function (...args: any[])  {
     if (arguments.length < 1 || typeof arguments[0] !== 'object') {
         return false;
     }
@@ -54,12 +55,12 @@ export const deepExtend = function (...args: any[]) {
         return arguments[0];
     }
 
-    var target = arguments[0];
+    let target = arguments[0];
 
     // convert arguments to array and cut off target object
     //var args = Array.prototype.slice.call(arguments, 1);
 
-    var val, src, clone;
+    let val, src, clone;
 
     args.forEach(function (obj) {
         // skip argument if isn't an object, is null, or is an array
@@ -109,7 +110,29 @@ export const deepExtend = function (...args: any[]) {
     return target;
 }
 
-
+export const Is = {
+	Array:  function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object Array]";
+	},
+	RegExp: function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object RegExp]";
+	},
+	Date: function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object Date]";
+	},
+	Number: function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object Number]";
+	},
+	String: function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object String]";
+	},
+	Object: function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object Object]";
+	},
+	HTMLDocument: function(obj :any):boolean {
+		return Object.prototype.toString.call(obj) == "[object HTMLDocument]";
+	},
+};
 
 
 

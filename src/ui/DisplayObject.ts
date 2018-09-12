@@ -19,6 +19,11 @@ export abstract class DisplayObject {
 		this.guid = Helper.componentUid();
 		this.dom = dom;
 		this.observable = new Paon.Observable();
+		this.init(dom , cfg);
+	}
+
+	protected init(dom: HTMLElement, cfg: DisplayObjectConfig){
+
 	}
 
 	trigger(evtName: string, data?: any) {

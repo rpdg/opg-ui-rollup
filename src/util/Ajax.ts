@@ -39,7 +39,7 @@ export interface ApiConfig  {
 	restful ?: boolean;
 }
 
-export class ApiCall {
+export class ApiInstance {
 	restful: boolean;
 	method: httpMethod;
 	url: string;

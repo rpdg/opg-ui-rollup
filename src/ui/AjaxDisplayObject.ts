@@ -1,20 +1,18 @@
-import { ApiConfig, ApiCall, ApiMethod, httpMethod , AjaxMessage} from "../util/Ajax";
+import { ApiConfig, ApiInstance, ApiMethod, httpMethod , AjaxMessage} from "../util/Ajax";
 import { DisplayObjectConfig, DisplayObject } from "./DisplayObject";
+import {deepExtend} from '../util/Helper';
+import ComponentEvents from "./ComponentEvents";
 
 export interface AjaxDisplayObjectConfig extends DisplayObjectConfig {
 	api?: string;
 	method?: httpMethod;
-	paramObject?:any;
+	param?:any;
+	data ?: any;
 }
 
-export const AjaxEvents = {
-	ajaxBegin: "AJAX_BEGIN",
-	ajaxEnd: "AJAX_END",
-	dataBind: "DATA_BIND"
-};
 
 export abstract class AjaxDisplayObject extends DisplayObject {
-	protected _axio?: ApiCall;
+	protected _axio?: ApiInstance;
 	protected _data: any;
 
 	public method: httpMethod = "get";
@@ -26,29 +24,37 @@ export abstract class AjaxDisplayObject extends DisplayObject {
 			this.method = cfg.method;
 		}
 		if (cfg.api) {
-			this._axio = new ApiCall(cfg.api, this.method, true);
-			this.callApi(cfg.paramObject);
+			this._axio = new ApiInstance(cfg.api, this.method, true);
+			this.callApi(cfg.param);
+		}
+		else if(cfg.data){
+			this.data = cfg.data;
 		}
 	}
 
 	protected async callApi(paramObject ?:any){
 		if (this._axio) {
-			this.trigger(AjaxEvents.ajaxBegin, paramObject);
+			this.trigger(ComponentEvents.ajaxBegin, paramObject);
+
 			let axioRes = await this._axio.invoke(paramObject);
-			this.trigger(AjaxEvents.ajaxEnd, axioRes);
-			let res :AjaxMessage = axioRes.data;
+			let resData :AjaxMessage = axioRes.data;
+			this.trigger(ComponentEvents.ajaxEnd, resData);
+
+			this.data = resData;
 		}
 	}
 
 	protected bind(data: any) {
-		this.trigger(AjaxEvents.dataBind, data);
+		console.log('to bind data: ' , data);
 	}
 
 	get data(): any {
 		return this._data;
 	}
 	set data(data: any) {
+		this.bind(data);
 		this._data = data;
+		this.trigger(ComponentEvents.dataBound, data);
 	}
 
 	update(param?: any) {
