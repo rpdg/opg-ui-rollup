@@ -11,30 +11,36 @@ export interface ListDisplayObjectConfig extends AjaxDisplayObjectConfig {
 
 
 export abstract class ListDisplayObject extends AjaxDisplayObject {
-	bindOpt: BindListOption = {
-		itemRender  : {}
-	};
+
+	bindOpt: BindListOption ;
 
 	constructor(dom: HTMLElement, cfg: ListDisplayObjectConfig) {
 		super(dom, cfg);
-		//this.bindOpt = deepExtend()
+		this.bindOpt = {itemRender  : {}} ;
 	}
 
-	protected init(dom: HTMLElement, cfg: ListDisplayObjectConfig){
-		bindList(dom , this.bindOpt);
-	}
 
 	protected bind(arr: Array<any>) {
-		bindList(this.dom , arr);
+		if(!this.bindOpt.list){
+			this.bindOpt.list = arr;
+			bindList(this.dom , this.bindOpt);
+		}
+		else{
+			bindList(this.dom , arr);
+		}
 	}
 
-	get data(): Array<any> {
+	
+	get data(): any[] {
 		return this._data;
 	}
+
 	set data(data: Array<any>) {
 		let arr = deepCloneArray(data);
 		this.bind(arr);
 		this._data = arr;
-		this.trigger(ComponentEvents.dataBound, arr);
+		this.trigger(ComponentEvents.updated, arr);
 	}
+	
+	abstract get selectedData(): any ;
 }

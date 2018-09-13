@@ -1,63 +1,68 @@
-import { ApiConfig, ApiInstance, ApiMethod, httpMethod , AjaxMessage} from "../util/Ajax";
+import { ApiConfig, ApiInstance, ApiMethod, httpMethod, AjaxMessage } from "../util/Ajax";
 import { DisplayObjectConfig, DisplayObject } from "./DisplayObject";
-import {deepExtend} from '../util/Helper';
+import { deepExtend } from "../util/Helper";
 import ComponentEvents from "./ComponentEvents";
 
 export interface AjaxDisplayObjectConfig extends DisplayObjectConfig {
 	api?: string;
 	method?: httpMethod;
-	param?:any;
-	data ?: any;
+	param ?: any;
 }
-
 
 export abstract class AjaxDisplayObject extends DisplayObject {
 	protected _axio?: ApiInstance;
+	protected _param : any;
+
 	protected _data: any;
 
-	public method: httpMethod = "get";
+	public method: httpMethod;
 
 	constructor(dom: HTMLElement, cfg: AjaxDisplayObjectConfig) {
 		super(dom, cfg);
 
-		if (cfg.method) {
-			this.method = cfg.method;
-		}
+		this._param = cfg.param || {};
+
+		this.method = cfg.method ||  'get' ;
+
 		if (cfg.api) {
 			this._axio = new ApiInstance(cfg.api, this.method, true);
-			this.callApi(cfg.param);
-		}
-		else if(cfg.data){
-			this.data = cfg.data;
 		}
 	}
 
-	protected async callApi(paramObject ?:any){
-		if (this._axio) {
-			this.trigger(ComponentEvents.ajaxBegin, paramObject);
-
-			let axioRes = await this._axio.invoke(paramObject);
-			let resData :AjaxMessage = axioRes.data;
-			this.trigger(ComponentEvents.ajaxEnd, resData);
-
-			this.data = resData;
+	async fetch(paramObject?: any): Promise<AjaxMessage> {
+		if (!this._axio) {
+			throw new Error("no api to call");
 		}
+
+		deepExtend(this._param , paramObject);
+
+		this.trigger(ComponentEvents.ajaxBegin, this._param);
+
+		let axioRes = await this._axio.invoke(this._param);
+		let resData: AjaxMessage = axioRes.data;
+		this.trigger(ComponentEvents.ajaxEnd, resData);
+
+		this.data = resData.data;
+
+		return resData;
+	}
+
+	async refresh(paramObject?: any): Promise<AjaxMessage>{
+		this._param = deepExtend({} , paramObject);
+		return this.fetch(this._param);
 	}
 
 	protected bind(data: any) {
-		console.log('to bind data: ' , data);
+		console.log("to bind data: ", data);
 	}
 
 	get data(): any {
 		return this._data;
 	}
 	set data(data: any) {
-		this.bind(data);
-		this._data = data;
-		this.trigger(ComponentEvents.dataBound, data);
-	}
-
-	update(param?: any) {
-		this.callApi(param);
+		let tar = deepExtend(data);
+		this.bind(tar);
+		this._data = tar;
+		this.trigger(ComponentEvents.updated, tar);
 	}
 }

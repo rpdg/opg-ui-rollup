@@ -1,90 +1,90 @@
-import {componentUid , Is} from './Helper'
+import { componentUid, Is } from "./Helper";
 
-
-export interface ItemRenderEntry{
-	(val :string , index ?:number , row ?:any , srcName ?:string): string
+export interface ItemRenderEntry {
+	(val: string, index?: number, row?: any, srcName?: string): string;
 }
 
 export interface ItemRender {
-    [renderName :string] : ItemRenderEntry
+	[renderName: string]: ItemRenderEntry;
 }
 export interface ItemFilter {
-    (row : any , index:number):any
+	(row: any, index: number): any;
 }
 
 export interface BindListOption {
 	list?: any[];
-    template ?: string;
-    mode ?: string;
+	template?: string;
+	mode?: string;
 	storeData?: boolean;
 	itemRender?: ItemRender;
 	itemFilter?: ItemFilter;
-    nullShown?: string;
-	joiner ?: string;
-	onBound ?: (list:Array<any> , sets :BindListOption)=>void
+	nullShown?: string;
+	joiner?: string;
+	onBound?: (list: Array<any>, sets: BindListOption) => void;
 }
-
 
 type BindCache = {
-    name :string;
-    __render : Function;
-    mode : string;
-	itemRender ?: ItemRender;
-    itemFilter ?: ItemFilter;
-    joiner : string;
-	onBound ?: (list:Array<any> , sets :BindListOption)=>void
-}
+	template: string;
+	__render__: Function;
+	mode: string;
+	itemRender?: ItemRender;
+	itemFilter?: ItemFilter;
+	joiner: string;
+	onBound?: (list: Array<any>, sets: BindListOption) => void;
+};
 
 interface IBoundHash {
-    [renderName :string] : BindCache
+	[renderName: string]: BindCache;
 }
 
+function makeCache(cacheId: string, sets: BindListOption): BindCache {
+	let template = sets.template || "";
+	const nullShown = sets.nullShown || "";
+	const rnderFns = template.match(/\${\w+(:=)+\w+}/g);
 
-function makeCache(sets: BindListOption) : BindCache{
-    let template = sets.template || '';
-    const nullShown = sets.nullShown || "";
-    const rnderFns = template.match(/\${\w+(:=)+\w+}/g);
-    let renderEvalStr = 'row[":index"]=i;';
+	let renderEvalStr = 'row[":index"]=i;';
+	let cleanEvalStr = "delete row[':index']; delete row[':rowNum']; ";
 
-    if (rnderFns) {
-        for (let fs = 0; fs < rnderFns.length; fs++) {
-            let _attr = rnderFns[fs].substr(2, rnderFns[fs].length - 3);
-            let _ndex = _attr.indexOf(":=");
-            let keyName = _attr.substr(0, _ndex);
-			renderEvalStr += "row['" + _attr + "']=scope['" + _attr.substr(_ndex + 2) + "'](row['" + keyName + "'] , i , row ,'" + keyName + "') ;";
-        }
-    }
+	if (rnderFns) {
+		for (let fs = 0; fs < rnderFns.length; fs++) {
+			let _attr = rnderFns[fs].substr(2, rnderFns[fs].length - 3);
+			let _ndex = _attr.indexOf(":=");
+			let keyName = _attr.substr(0, _ndex);
+			renderEvalStr += 
+				"row['" + _attr + "']=scope['" + _attr.substr(_ndex + 2) + "'](row['" + keyName + "'] , i , row ,'" + keyName + "') ;";
 
-    const pattern = /\${(\w*[:]*[=]*\w+)\}(?!})/g;
-    const str = template.replace(pattern, function(match, key, i) {
-		return '\'+((row[\'' + key + '\']===null||row[\'' + key + '\']===undefined||Infinity===row[\'' + key + '\'])?\'' + nullShown + '\':row[\'' + key + '\'])+\'';
-    });
+			cleanEvalStr += "delete row['" + _attr + "']; "
+		}
+	}
 
-    
-    renderEvalStr += `var out='${str}'; return out;`;
-    
-    
-    let cache :BindCache = { 
-        name: template,
-        __render : new Function("row", "i", "scope", renderEvalStr),
-        mode : sets.mode || '',
-        itemRender : sets.itemRender,
-        itemFilter : sets.itemFilter,
-		joiner : sets.joiner || '',
-		onBound : sets.onBound 
-    };
+	const pattern = /\${(\w*[:]*[=]*\w+)\}(?!})/g;
+	const str = template.replace(pattern, function(match, key, i) {
+		return  "'+((row['" + key + "']===null||row['" + key + "']===undefined||Infinity===row['" + key + "'])?'" + nullShown + "':row['" + key + "'])+'"	;
+	});
+
+	renderEvalStr += "var out='"+ str + "'; "+ cleanEvalStr +"return out;";
+
+	let cache: BindCache = {
+		template: template,
+		__render__: new Function("row", "i", "scope", renderEvalStr),
+		mode: sets.mode || "",
+		itemRender: sets.itemRender,
+		itemFilter: sets.itemFilter,
+		joiner: sets.joiner || "",
+		onBound: sets.onBound
+	};
+
+	boundHash[cacheId] = cache;
 
 	return cache;
 }
 
-function removeCache(id:string) {
-    delete boundHash[id];
+function removeCache(id: string) {
+	delete boundHash[id];
 }
 
 // the setting cache for bindUrl and bindList use
-const boundHash : IBoundHash = {
-};
-
+const boundHash: IBoundHash = {};
 
 // bindList :
 // 转义用： {{property}}
@@ -97,62 +97,70 @@ const boundHash : IBoundHash = {
 // sets.onBound  : [event]
 // sets.joiner : 各个结果的连接字符，默认空
 // set.nullShown : 将值为null的属性作何种显示，默认显示为empty string
-export const bindList = function(elem: HTMLElement, sets: BindListOption|Array<object>) {
-	let cacheId = elem.id || (function() {
-                                    elem.id = componentUid().toString();
-                                    return elem.id;
-                                })();
+export const bindList = function(elem: HTMLElement, sets: BindListOption | object[]) {
+	let cacheId =
+		elem.id ||
+		(function() {
+			elem.id = "ui_" + componentUid();
+			return elem.id;
+		})();
 
-	let cache : BindCache = boundHash[cacheId] || {};
+	let cache: BindCache;
 
-	let template :string|undefined,
-		list : object[],
-		itemRender : ItemRender|undefined,
-		itemFilter :ItemFilter|undefined,
-		mode : string;
+	let template: string | undefined,
+		list: object[],
+		itemRender: ItemRender | undefined,
+		itemFilter: ItemFilter | undefined,
+		mode: string;
 
 	/*
 		当先前已经设定过template的时候，
 		可以只传入一个JSON list作参数以精简代码，
 		而且render/filter/mode/event 均依照最近一次设定
-	*/	
+	*/
 	if (Is.Array(sets)) {
-		cache = boundHash[cacheId]; 
+		if (!boundHash[cacheId]) {
+			throw new Error("bind list cache not init yet");
+		}
+
+		cache = boundHash[cacheId];
+
 		list = sets as object[];
 
 		itemRender = cache.itemRender;
 		itemFilter = cache.itemFilter;
 		mode = cache.mode;
-	}
+	} 
 	else {
-		let _sets = <BindListOption> sets ;
+		let _sets = sets as BindListOption;
 		template = _sets.template;
 
-		if (template !== undefined && cache["name"] != template) {
-			cache = makeCache(_sets);
-			boundHash[cacheId] = cache;
+		if (boundHash[cacheId] && boundHash[cacheId].template === template) {
+			cache = boundHash[cacheId];
+		} 
+		else {
+			cache = makeCache(cacheId, _sets);
 		}
 
 		list = _sets.list || [];
 
-		itemRender = _sets.itemRender || cache.itemRender;
-		itemFilter = _sets.itemFilter || cache.itemFilter;
-		mode = _sets.mode || cache.mode;
+		itemRender = cache.itemRender;
+		itemFilter = cache.itemFilter;
+		mode = cache.mode;
 	}
 
 	let scope = itemRender || window,
 		htmlStrs = [],
 		nb = 0,
 		rowObject,
-		useFilter = (typeof itemFilter === "function");
+		useFilter = typeof itemFilter === "function";
 
-
-	for (let i=0 , l = list.length; i < l ; i++) {
+	for (let i = 0, l = list.length; i < l; i++) {
 		rowObject = list[i];
 
 		//过滤data
 		if (useFilter) {
-			rowObject = (<ItemFilter> itemFilter)(rowObject, i);
+			rowObject = (<ItemFilter>itemFilter)(rowObject, i);
 		}
 
 		//如果data没有被itemFilter过滤掉
@@ -160,7 +168,7 @@ export const bindList = function(elem: HTMLElement, sets: BindListOption|Array<o
 			//行号
 			rowObject[":rowNum"] = ++nb;
 			//renderer
-			htmlStrs[i] = cache["__render"](rowObject, i, scope);
+			htmlStrs[i] = cache["__render__"](rowObject, i, scope);
 		}
 	}
 
@@ -169,5 +177,4 @@ export const bindList = function(elem: HTMLElement, sets: BindListOption|Array<o
 	if (typeof cache.onBound === "function") {
 		cache.onBound.call(elem, list, sets);
 	}
-
 };

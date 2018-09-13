@@ -2,9 +2,8 @@ import { ListDisplayObjectConfig } from "./ListDisplayObject";
 import {ItemRenderEntry} from '../util/BindList';
 
 export interface IFormComponent {
-	value: any;
-	text: any;
-	name: string;
+	value: string;
+	text: string;
 }
 
 export interface FormComponentConfig extends ListDisplayObjectConfig {

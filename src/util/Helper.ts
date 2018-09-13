@@ -46,21 +46,19 @@ function safeGetProperty(object: any, property: string) {
     return property === "__proto__" ? undefined : object[property];
 }
 
-export const deepExtend = function (...args: any[])  {
+
+export  function deepExtend<T> (extendTarget :T ,...args: any[]) :T  {
     if (arguments.length < 1 || typeof arguments[0] !== 'object') {
-        return false;
+        throw new Error('no object to deep extend.');
     }
 
     if (arguments.length < 2) {
-        return arguments[0];
+        return deepExtend({} as T , arguments[0]);
     }
 
-    let target = arguments[0];
+    let target = extendTarget as any;
 
-    // convert arguments to array and cut off target object
-    //var args = Array.prototype.slice.call(arguments, 1);
-
-    let val, src, clone;
+    let val, src ;
 
     args.forEach(function (obj) {
         // skip argument if isn't an object, is null, or is an array

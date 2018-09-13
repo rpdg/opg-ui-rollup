@@ -20,9 +20,11 @@
 	 */
 	export class Observable {
 		observers: { [type: string]: Observer[] };
+		owner : any;
 
-		constructor() {
+		constructor(owner : any = window) {
 			this.observers = {};
+			this.owner = owner;
 		} // constructor
 		/**
 		 * Add an observer to a type of message
@@ -74,7 +76,7 @@
 		notifyObservers(type: string, msg?: any): void {
 			if (type in this.observers) {
 				for (let obs of this.observers[type]) {
-					obs(msg);
+					obs.call(this.owner , msg);
 				} // for obs
 			}
 		} // notifyObservers
