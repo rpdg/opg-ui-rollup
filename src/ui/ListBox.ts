@@ -14,12 +14,19 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
 
 	private prependBlank: string ;
 
+
 	constructor(dom: HTMLElement, cfg: ListBoxConfig) {
 		super(dom,  cfg);
 
+		let eleName = cfg.name || `uiSelect_${Helper.componentUid()}`;
 
-		let eleName = cfg.name || `Select_${Helper.componentUid()}`;
+		if(this.dom.tagName != 'SELECT'){
+			throw new Error(eleName + 'must bind to a select dom');
+		}
+
+		
 		let selElem:HTMLSelectElement = this.dom as HTMLSelectElement;
+
 		if(selElem.name != eleName){
 			selElem.name = eleName;
 		}
@@ -87,18 +94,34 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
 		return '';
 	}
 	set text(v: string) {
-		AjaxForm.recheckDroplist(<HTMLSelectElement>this.dom , v , true);
+		let selectElem: HTMLSelectElement = <HTMLSelectElement>this.dom;
+		let oldIndex = selectElem.selectedIndex;
+		if(oldIndex > -1){
+			let newIndex = AjaxForm.recheckDroplist(selectElem , v , true);
+			if(newIndex != oldIndex){
+				let event = new Event('change');
+				selectElem.dispatchEvent(event);
+			}
+		}
 	}
 
 	get value(): string{
 		let selectElem: HTMLSelectElement = <HTMLSelectElement>this.dom;
 		if(selectElem.selectedIndex > -1){
-			return (selectElem.options[selectElem.selectedIndex] as HTMLOptionElement).value;
+			return selectElem.value;
 		}
 		return '';
 	}
 	set value(v: string) {
-        AjaxForm.recheckDroplist(<HTMLSelectElement>this.dom , v );
+		let selectElem: HTMLSelectElement = <HTMLSelectElement>this.dom;
+		let oldIndex = selectElem.selectedIndex;
+		if(oldIndex > -1){
+			let newIndex = AjaxForm.recheckDroplist(selectElem , v );
+			if(newIndex != oldIndex){
+				let event = new Event('change');
+				selectElem.dispatchEvent(event);
+			}
+		}
 	}
 	
 	get selectedData():any{

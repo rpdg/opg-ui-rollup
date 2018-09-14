@@ -30,6 +30,7 @@ export abstract class ListDisplayObject extends AjaxDisplayObject {
 		}
 	}
 
+
 	
 	get data(): any[] {
 		return this._data;
