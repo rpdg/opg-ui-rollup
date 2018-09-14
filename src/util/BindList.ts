@@ -40,7 +40,7 @@ interface IBoundHash {
 function makeCache(cacheId: string, sets: BindListOption): BindCache {
 	let template = sets.template || "";
 	const nullShown = sets.nullShown || "";
-	const rnderFns = template.match(/\${\w+(:=)+\w+}/g);
+	const rnderFns = template.match(/\${[\w|.]+(:=)+\w+}/g);
 
 	let renderEvalStr = 'row[":index"]=i;';
 	let cleanEvalStr = "delete row[':index']; delete row[':rowNum']; ";
@@ -51,15 +51,15 @@ function makeCache(cacheId: string, sets: BindListOption): BindCache {
 			let _ndex = _attr.indexOf(":=");
 			let keyName = _attr.substr(0, _ndex);
 			renderEvalStr += 
-				"row['" + _attr + "']=scope['" + _attr.substr(_ndex + 2) + "'](row['" + keyName + "'] , i , row ,'" + keyName + "') ;";
+				"row['" + _attr + "']=scope['" + _attr.substr(_ndex + 2) + "'](row['" + keyName.split('.').join("']['") + "'] , i , row ,'" + keyName + "') ;";
 
 			cleanEvalStr += "delete row['" + _attr + "']; "
 		}
 	}
 
-	const pattern = /\${(\w*[:]*[=]*\w+)\}(?!})/g;
+	const pattern = /\${([\w|.]*[:]*[=]*\w+)\}(?!})/g;
 	const str = template.replace(pattern, function(match, key, i) {
-		return  "'+((row['" + key + "']===null||row['" + key + "']===undefined||Infinity===row['" + key + "'])?'" + nullShown + "':row['" + key + "'])+'"	;
+		return  "'+((row['" + key + "']===null||row['" + key + "']===undefined)?'" + nullShown + "':row['" + key + "'])+'"	;
 	});
 
 	renderEvalStr += "var out='"+ str + "'; "+ cleanEvalStr +"return out;";

@@ -20,10 +20,12 @@ export class CheckBox extends ListDisplayObject implements IFormComponent {
     }
     
     get value():string[]{
-        
 		return [];
     }
     set value(v:string[]){
 
+    }
+    get selectedData():any{
+        return null;
     }
 }

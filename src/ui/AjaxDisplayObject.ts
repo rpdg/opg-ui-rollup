@@ -1,10 +1,11 @@
 import { ApiConfig, ApiInstance, ApiMethod, httpMethod, AjaxMessage } from "../util/Ajax";
 import { DisplayObjectConfig, DisplayObject } from "./DisplayObject";
-import { deepExtend } from "../util/Helper";
+import { deepExtend , jsonPath} from "../util/Helper";
 import ComponentEvents from "./ComponentEvents";
 
 export interface AjaxDisplayObjectConfig extends DisplayObjectConfig {
 	api?: string;
+	dataSrc : string,
 	method?: httpMethod;
 	param ?: any;
 }
@@ -14,11 +15,14 @@ export abstract class AjaxDisplayObject extends DisplayObject {
 	protected _param : any;
 
 	protected _data: any;
+	protected _dataSrc : string ;
 
 	public method: httpMethod;
 
 	constructor(dom: HTMLElement, cfg: AjaxDisplayObjectConfig) {
 		super(dom, cfg);
+
+		this._dataSrc = cfg.dataSrc === undefined ? 'data' : cfg.dataSrc ;
 
 		this._param = cfg.param || {};
 
@@ -42,7 +46,7 @@ export abstract class AjaxDisplayObject extends DisplayObject {
 		let resData: AjaxMessage = axioRes.data;
 		this.trigger(ComponentEvents.ajaxEnd, resData);
 
-		this.data = resData.data;
+		this.data = jsonPath(resData , this._dataSrc);
 
 		return resData;
 	}

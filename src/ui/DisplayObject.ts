@@ -35,4 +35,12 @@ export abstract class DisplayObject {
 			this.observable.removeObserversType(evtName);
 		}
 	}
+	once(evtName: string, todo: Paon.Observer){
+		let that = this ;
+		let fn = function(obj :any){
+			todo.call(that , obj);
+			that.observable.removeObserver(evtName, fn);
+		}
+		this.on(evtName , fn);
+	}
 }
