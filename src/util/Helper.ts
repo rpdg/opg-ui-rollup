@@ -139,3 +139,37 @@ export const jsonPath =  function  (src: any, path ?: string): any {
 		return eval(`(src${props})`);
 	}
 };
+
+
+type StringMap = {
+	[key :string] : string
+}
+
+const htmlEncodeMap :StringMap = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	"\"": "&quot;",
+	"'": "&#39;" // ' -> &apos; for XML only
+};
+
+export const htmlEncode = function (str:string) :string {
+    return str.replace(/[&<>"']/g, function(m :string) :string { 
+		return htmlEncodeMap[m]; 
+	});
+}
+
+const htmlDecodeMap :StringMap =  {
+	"&amp;": "&",
+	"&lt;": "<",
+	"&gt;": ">",
+	"&quot;": "\"",
+	"&#39;": "'"
+};
+
+export const htmlDecode = function(str :string):string{
+	return str.replace(/(&amp;|&lt;|&gt;|&quot;|&#39;)/g, function(m) { 
+		return htmlDecodeMap[m]; 
+	});
+}
+

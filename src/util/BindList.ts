@@ -1,4 +1,4 @@
-import { componentUid, Is } from "./Helper";
+import { componentUid, Is, htmlEncode } from "./Helper";
 
 export interface ItemRenderEntry {
 	(val: string, index?: number, row?: any, srcName?: string): string;
@@ -37,12 +37,19 @@ interface IBoundHash {
 	[renderName: string]: BindCache;
 }
 
+function xss(vva :any):any{
+	if(typeof vva === 'string'){
+		return htmlEncode(vva);
+	}
+	return vva;
+}
+
 function makeCache(cacheId: string, sets: BindListOption): BindCache {
 	let template = sets.template || "";
 	const nullShown = sets.nullShown || "";
 	const rnderFns = template.match(/\${[\w|.]+(:=)+\w+}/g);
 
-	let renderEvalStr = 'row[":index"]=i;';
+	let renderEvalStr = 'row[":index"]=i; ';
 	let cleanEvalStr = "delete row[':index']; delete row[':rowNum']; ";
 
 	if (rnderFns) {
@@ -50,20 +57,35 @@ function makeCache(cacheId: string, sets: BindListOption): BindCache {
 			let _attr = rnderFns[fs].substr(2, rnderFns[fs].length - 3);
 			let _ndex = _attr.indexOf(":=");
 			let keyName = _attr.substr(0, _ndex);
+			let pathName = keyName.split('.').join("']['");
+			let _renderName = _attr.substr(_ndex + 2);
+			let attrRender =  pathName + ":=" + _renderName;
 			renderEvalStr += 
-				"row['" + _attr + "']=scope['" + _attr.substr(_ndex + 2) + "'](row['" + keyName.split('.').join("']['") + "'] , i , row ,'" + keyName + "') ;";
+				"row['" + attrRender + "']=scope['" + _renderName + "'](scope['__XSS__'](row['" + pathName + "']) , i , row ,'" + keyName + "') ;";
 
-			cleanEvalStr += "delete row['" + _attr + "']; "
+			cleanEvalStr += "delete row['" + attrRender + "']; "
 		}
 	}
 
 	const pattern = /\${([\w|.]*[:]*[=]*\w+)\}(?!})/g;
 	const str = template.replace(pattern, function(match, key, i) {
-		return  "'+((row['" + key + "']===null||row['" + key + "']===undefined)?'" + nullShown + "':row['" + key + "'])+'"	;
+		let pathName = key.split('.').join("']['");
+		let scriptStr = "'+( row['" + pathName + "']===null||row['" + pathName + "']===undefined ?'" + nullShown + "':  " ;
+		scriptStr += pathName.indexOf(':=')=== -1? "scope['__XSS__'](row['" + pathName + "']))+'" : "row['" + pathName + "'])+'" 
+		return  scriptStr;
 	});
 
+	renderEvalStr += ''
 	renderEvalStr += "var out='"+ str + "'; "+ cleanEvalStr +"return out;";
 
+	if(sets.itemRender){
+		sets.itemRender['__XSS__'] = xss;
+	}
+	else{
+		sets.itemRender = {
+			'__XSS__' : xss
+		};
+	}
 	let cache: BindCache = {
 		template: template,
 		__render__: new Function("row", "i", "scope", renderEvalStr),
