@@ -75,7 +75,6 @@ function makeCache(cacheId: string, sets: BindListOption): BindCache {
 		return  scriptStr;
 	});
 
-	renderEvalStr += ''
 	renderEvalStr += "var out='"+ str + "'; "+ cleanEvalStr +"return out;";
 
 	if(sets.itemRender){
