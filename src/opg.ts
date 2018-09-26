@@ -1,8 +1,9 @@
 import Span from './ui/Span';
 import { AjaxDisplayObjectConfig } from './ui/AjaxDisplayObject';
-import { CheckBox } from './ui/CheckBox';
+import { CheckBox , CheckBoxConfig } from './ui/CheckBox';
 import { FormComponentConfig } from './ui/IComponent';
 import { ListBox , ListBoxConfig} from './ui/ListBox';
+import { RadioBox , RadioBoxConfig} from './ui/RadioBox';
 
 
 class OpgUi {
@@ -29,8 +30,12 @@ class OpgUi {
 		return new ListBox(this.dom, cfg);
 	}
 
-	checkBox(cfg: FormComponentConfig): CheckBox {
+	checkBox(cfg: CheckBoxConfig): CheckBox {
 		return new CheckBox(this.dom, cfg);
+	}
+
+	radioBox(cfg: RadioBoxConfig): RadioBox {
+		return new RadioBox(this.dom, cfg);
 	}
 
 	span(cfg: any): Span {

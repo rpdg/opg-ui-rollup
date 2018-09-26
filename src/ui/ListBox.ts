@@ -1,5 +1,5 @@
 import * as Helper from '../util/Helper';
-import AjaxForm from './Form';
+import AjaxForm from './AjaxForm';
 import ComponentEvents from './ComponentEvents';
 import { FormComponentConfig, IFormComponent } from './IComponent';
 import { ItemRender, bindList, BindListOption  } from './../util/BindList';

@@ -37,11 +37,14 @@ interface IBoundHash {
 	[renderName: string]: BindCache;
 }
 
-function xss(vva :any):any{
-	if(typeof vva === 'string'){
-		return htmlEncode(vva);
+function xss(obj :any):any{
+	for(let key in obj){
+		let vva = obj[key];
+		if(typeof vva === 'string'){
+			obj[key] = htmlEncode(vva);
+		}
 	}
-	return vva;
+	return obj;
 }
 
 function makeCache(cacheId: string, sets: BindListOption): BindCache {
@@ -61,7 +64,7 @@ function makeCache(cacheId: string, sets: BindListOption): BindCache {
 			let _renderName = _attr.substr(_ndex + 2);
 			let attrRender =  pathName + ":=" + _renderName;
 			renderEvalStr += 
-				"row['" + attrRender + "']=scope['" + _renderName + "'](scope['__XSS__'](row['" + pathName + "']) , i , row ,'" + keyName + "') ;";
+				"row['" + attrRender + "']=scope['" + _renderName + "'](row['" + pathName + "'] , i , row ,'" + keyName + "') ;";
 
 			cleanEvalStr += "delete row['" + attrRender + "']; "
 		}
@@ -70,21 +73,12 @@ function makeCache(cacheId: string, sets: BindListOption): BindCache {
 	const pattern = /\${([\w|.]*[:]*[=]*\w+)\}(?!})/g;
 	const str = template.replace(pattern, function(match, key, i) {
 		let pathName = key.split('.').join("']['");
-		let scriptStr = "'+( row['" + pathName + "']===null||row['" + pathName + "']===undefined ?'" + nullShown + "':  " ;
-		scriptStr += pathName.indexOf(':=')=== -1? "scope['__XSS__'](row['" + pathName + "']))+'" : "row['" + pathName + "'])+'" 
+		let scriptStr = "'+( row['" + pathName + "']===null||row['" + pathName + "']===undefined ?'" + nullShown + "': row['" + pathName + "'])+'" 
 		return  scriptStr;
 	});
 
 	renderEvalStr += "var out='"+ str + "'; "+ cleanEvalStr +"return out;";
 
-	if(sets.itemRender){
-		sets.itemRender['__XSS__'] = xss;
-	}
-	else{
-		sets.itemRender = {
-			'__XSS__' : xss
-		};
-	}
 	let cache: BindCache = {
 		template: template,
 		__render__: new Function("row", "i", "scope", renderEvalStr),
@@ -186,6 +180,8 @@ export const bindList = function(elem: HTMLElement, sets: BindListOption | objec
 
 		//如果data没有被itemFilter过滤掉
 		if (rowObject) {
+			//protect xss
+			xss(rowObject);
 			//行号
 			rowObject[":rowNum"] = ++nb;
 			//renderer
