@@ -19,6 +19,7 @@ class AjaxForm extends AjaxDisplayObject {
         
         return selectedIndex;
 	}
+	
 }
 
 export default AjaxForm;
