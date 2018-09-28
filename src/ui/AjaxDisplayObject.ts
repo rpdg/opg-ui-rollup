@@ -17,7 +17,7 @@ export abstract class AjaxDisplayObject extends DisplayObject {
 	protected _data: any;
 	protected _dataSrc : string ;
 
-	public method: httpMethod;
+	protected _method: httpMethod;
 
 	constructor(dom: HTMLElement, cfg: AjaxDisplayObjectConfig) {
 		super(dom, cfg);
@@ -26,19 +26,25 @@ export abstract class AjaxDisplayObject extends DisplayObject {
 
 		this._param = cfg.param || {};
 
-		this.method = cfg.method ||  'get' ;
+		this._method = cfg.method ||  'get' ;
 
 		if (cfg.api) {
-			this._axio = new ApiInstance(cfg.api, this.method, true);
+			this._axio = new ApiInstance(cfg.api, this._method, true);
 		}
 	}
 
-	async fetch(paramObject?: any): Promise<AjaxMessage> {
+	async fetch(paramObject?: any , override?:boolean): Promise<AjaxMessage> {
 		if (!this._axio) {
 			throw new Error("no api to call");
 		}
 
-		deepExtend(this._param , paramObject);
+		if(override){
+			this._param = paramObject ;
+		}
+		else{
+			deepExtend(this._param , paramObject);
+		}
+		
 
 		this.trigger(ComponentEvents.ajaxBegin, this._param);
 

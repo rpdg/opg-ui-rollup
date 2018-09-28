@@ -20,23 +20,23 @@ axios.defaults.baseURL = cfg.apiServer;
 axios.defaults.headers.post["Content-Type"] = "application/json";
 axios.defaults.timeout = 10e3;
 
-export type httpMethod = 'get'|'post'|'put'|'delete';
+export type httpMethod = "get" | "post" | "put" | "delete";
 
 interface IApiMethod {
-	[key:string] : httpMethod
+	[key: string]: httpMethod;
 }
 
-export const ApiMethod :IApiMethod = {
-	Get : 'get',
-	Post : 'post',
-	Put : 'put',
-	Delete : 'delete',
-}
+export const ApiMethod: IApiMethod = {
+	Get: "get",
+	Post: "post",
+	Put: "put",
+	Delete: "delete"
+};
 
-export interface ApiConfig  {
-	url : string;
-	method ?: httpMethod ;
-	restful ?: boolean;
+export interface ApiConfig {
+	url: string;
+	method?: httpMethod;
+	restful?: boolean;
 }
 
 export class ApiInstance {
@@ -44,14 +44,14 @@ export class ApiInstance {
 	method: httpMethod;
 	url: string;
 
-	constructor(url: string, method :httpMethod = "get" , restful:boolean = true) {
+	constructor(url: string, method: httpMethod = "get", restful: boolean = true) {
 		this.restful = restful;
 		this.method = method;
 		this.url = url;
 	}
 
-	async invoke(data?: any) {
-		let res =  await axios.request<AjaxMessage>({
+	async invoke(data?: any): Promise<AxiosResponse<AjaxMessage>> {
+		let res = await axios.request<AjaxMessage>({
 			method: this.method,
 			params: data,
 			url: this.url
@@ -59,12 +59,12 @@ export class ApiInstance {
 		return res;
 	}
 
-	async post(paramsObj?: any) {
+	async post(paramsObj?: any): Promise<AjaxMessage> {
 		let res = await axios.post<AjaxMessage>(this.url, paramsObj);
 		return res.data;
 	}
-	async get(paramsObj?: any) {
-		let res = await axios.get<AjaxMessage>(this.url, {params: paramsObj});
+	async get(paramsObj?: any): Promise<AjaxMessage> {
+		let res = await axios.get<AjaxMessage>(this.url, { params: paramsObj });
 		return res.data;
 	}
 }

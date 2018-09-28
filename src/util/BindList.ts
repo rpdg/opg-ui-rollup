@@ -40,8 +40,11 @@ interface IBoundHash {
 function xss(obj :any):any{
 	for(let key in obj){
 		let vva = obj[key];
-		if(typeof vva === 'string'){
+		if(Is.String(vva)){
 			obj[key] = htmlEncode(vva);
+		}
+		else if(Is.PlainObject(vva)){
+			xss(vva);
 		}
 	}
 	return obj;

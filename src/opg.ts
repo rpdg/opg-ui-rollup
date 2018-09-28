@@ -4,6 +4,7 @@ import { CheckBox , CheckBoxConfig } from './ui/CheckBox';
 import { FormComponentConfig } from './ui/IComponent';
 import { ListBox , ListBoxConfig} from './ui/ListBox';
 import { RadioBox , RadioBoxConfig} from './ui/RadioBox';
+import { Table , TableConfig } from './ui/Table';
 
 
 class OpgUi {
@@ -36,6 +37,10 @@ class OpgUi {
 
 	radioBox(cfg: RadioBoxConfig): RadioBox {
 		return new RadioBox(this.dom, cfg);
+	}
+
+	table(cfg: TableConfig): Table {
+		return new Table(this.dom, cfg);
 	}
 
 	span(cfg: any): Span {

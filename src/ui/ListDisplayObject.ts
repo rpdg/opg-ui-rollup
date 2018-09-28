@@ -36,8 +36,8 @@ export abstract class ListDisplayObject extends AjaxDisplayObject {
 		return this._data;
 	}
 
-	set data(data: Array<any>) {
-		let arr = deepCloneArray(data);
+	set data(list: any[]) {
+		let arr = deepCloneArray(list);
 		this.bind(arr);
 		this._data = arr;
 		this.trigger(ComponentEvents.updated, arr);
