@@ -6,7 +6,7 @@ import * as Paon from '../util/Paon';
 
 
 export interface DisplayObjectConfig {
-	onCreate?: (data: any[]) => void;
+	//onCreate?: (data: any[]) => void;
 }
 
 export abstract class DisplayObject {

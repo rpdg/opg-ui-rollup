@@ -127,68 +127,93 @@ export const Is = {
 	HTMLDocument: function(obj: any): boolean {
 		return Object.prototype.toString.call(obj) == "[object HTMLDocument]";
 	},
-	PlainObject : function(obj:any) {
-
+	PlainObject: function(obj: any) {
 		// Basic check for Type object that's not null
-		if (typeof obj == 'object' && obj !== null) {
-	  
-		  // If Object.getPrototypeOf supported, use it
-		  if (typeof Object.getPrototypeOf == 'function') {
-			var proto = Object.getPrototypeOf(obj);
-			return proto === Object.prototype || proto === null;
-		  }
-		  
-		  // Otherwise, use internal class
-		  // This should be reliable as if getPrototypeOf not supported, is pre-ES5
-		  return Object.prototype.toString.call(obj) == '[object Object]';
+		if (typeof obj == "object" && obj !== null) {
+			// If Object.getPrototypeOf supported, use it
+			if (typeof Object.getPrototypeOf == "function") {
+				var proto = Object.getPrototypeOf(obj);
+				return proto === Object.prototype || proto === null;
+			}
+
+			// Otherwise, use internal class
+			// This should be reliable as if getPrototypeOf not supported, is pre-ES5
+			return Object.prototype.toString.call(obj) == "[object Object]";
 		}
-		
+
 		// Not an object
 		return false;
 	}
 };
 
-export const jsonPath =  function  (src: any, path ?: string): any {
+export const jsonPath = function(src: object, path?: string): any {
 	if (!path) {
 		return src;
-	} 
-	else {
-		let arr = path.split('.');
-		let props = `["${arr.join('"]["')}"]`; 
+	} else {
+		let arr = path.split(".");
+		let props = `["${arr.join('"]["')}"]`;
 		return eval(`(src${props})`);
 	}
 };
 
-
 type StringMap = {
-	[key :string] : string
-}
+	[key: string]: string;
+};
 
-const htmlEncodeMap :StringMap = {
+const htmlEncodeMap: StringMap = {
 	"&": "&amp;",
 	"<": "&lt;",
 	">": "&gt;",
-	"\"": "&quot;",
+	'"': "&quot;",
 	"'": "&#39;" // ' -> &apos; for XML only
 };
 
-export const htmlEncode = function (str:string) :string {
-    return str.replace(/[&<>"']/g, function(m :string) :string { 
-		return htmlEncodeMap[m]; 
+export const htmlEncode = function(str: string): string {
+	return str.replace(/[&<>"']/g, function(m: string): string {
+		return htmlEncodeMap[m];
 	});
-}
+};
 
-const htmlDecodeMap :StringMap =  {
+const htmlDecodeMap: StringMap = {
 	"&amp;": "&",
 	"&lt;": "<",
 	"&gt;": ">",
-	"&quot;": "\"",
+	"&quot;": '"',
 	"&#39;": "'"
 };
 
-export const htmlDecode = function(str :string):string{
-	return str.replace(/(&amp;|&lt;|&gt;|&quot;|&#39;)/g, function(m) { 
-		return htmlDecodeMap[m]; 
+export const htmlDecode = function(str: string): string {
+	return str.replace(/(&amp;|&lt;|&gt;|&quot;|&#39;)/g, function(m) {
+		return htmlDecodeMap[m];
 	});
-}
+};
 
+//https://codepen.io/malyw/pen/azJGNw
+const isSame = document.body.isEqualNode ? "isEqualNode" : "isSameNode";
+export const delegate = function(
+	wrapperEl: HTMLElement,
+	eventName: string,
+	delegatedElClass: string,
+	action: Function
+) {
+	wrapperEl.addEventListener(eventName, function(event) {
+		let clickedEl = event.target as HTMLElement;
+		let checkingNode: HTMLElement | undefined = clickedEl;
+
+		while (checkingNode) {
+			if (checkingNode[isSame](wrapperEl)) {
+				// checking element itself
+				checkingNode = undefined; // STOP loop
+			} else {
+				if (checkingNode.classList.contains(delegatedElClass)) {
+					// found delegated element
+					action.call(checkingNode, event); // "this" will be delegated el
+					checkingNode = undefined; // STOP loop
+				} else {
+					// going to parent node
+					checkingNode = checkingNode.parentNode as HTMLElement;
+				}
+			}
+		}
+	});
+};

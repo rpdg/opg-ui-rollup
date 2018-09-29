@@ -1,7 +1,10 @@
+import { TablePagination } from './Table';
+import { Pagination , PaginationConfig } from './Pagination';
 import { ListDisplayObject, ListDisplayObjectConfig } from "./ListDisplayObject";
 import { ItemRenderEntry } from "../util/BindList";
 import * as Helper from "../util/Helper";
 import { ItemRender, bindList, BindListOption } from "./../util/BindList";
+import ComponentEvents from './ComponentEvents';
 
 type TableCmd = "checkAll" | "checkOne";
 type RowConfig = {
@@ -28,10 +31,14 @@ type TitleBarCfg = {
 	buttons?: TitleBarButton[];
 };
 
+export interface TablePagination {
+	src ?: string;
+	size ?: number;
+};
 export interface TableConfig extends ListDisplayObjectConfig {
 	row: RowConfig;
 	columns: ColumnCfg[];
-	pagination: boolean | number;
+	pagination: boolean | number | TablePagination;
 	titleBar: TitleBarCfg;
 }
 
@@ -39,13 +46,16 @@ export class Table extends ListDisplayObject {
 	table: HTMLTableElement;
 	thead: HTMLTableSectionElement;
 	tbody: HTMLTableSectionElement;
+	tfoot ?: HTMLTableSectionElement;
 	cmd ?: TableCmd;
+	pagination ?: TablePagination;
 
 	constructor(dom: HTMLElement, cfg: TableConfig) {
 		super(dom, cfg);
 
 		if (this.dom.tagName === "TABLE") {
 			this.table = this.dom as HTMLTableElement;
+			this.table.classList.add("grid");
 		} else {
 			this.table = document.createElement("table");
 			this.table.className = "grid";
@@ -57,10 +67,42 @@ export class Table extends ListDisplayObject {
 		this.tbody = document.createElement("tbody");
 		this.table.appendChild(this.tbody);
 
-		let bOpt = Helper.deepExtend(this.bindOpt, cfg.bindOpt);
-		if (!bOpt.template) {
-			this.makeTemplate(cfg , bOpt);
+		if(cfg.pagination){
+
+			let pageSrc = '' ;
+			let pageSize = 10 ;
+
+			if(typeof cfg.pagination === 'boolean'){
+				pageSize = 10;
+			}
+			else if(typeof cfg.pagination === 'number'){
+				pageSize = cfg.pagination;
+			}
+			else{
+				pageSrc = (cfg.pagination as TablePagination).src || '';
+				pageSize = (cfg.pagination as TablePagination).size || 10 ;
+			}
+
+
+			this.tfoot = this.makeTableFoot(cfg);
+
+			let tb = this;
+			this.once(ComponentEvents.ajaxEnd , (ajaxRes : any)=>{
+				let pageValues = Helper.jsonPath(ajaxRes , pageSrc);
+				this.makePagination({
+					size : pageSize ,
+					total : pageValues['total'] as number,
+					action: function(n : number){
+						tb.fetch({
+							page : n
+						});
+					}
+				})
+			});
 		}
+
+		let bOpt = Helper.deepExtend(this.bindOpt, cfg.bindOpt);
+		this.makeTemplate(cfg , bOpt);
 
 		bindList(this.tbody, this.bindOpt);
 	}
@@ -156,6 +198,26 @@ export class Table extends ListDisplayObject {
 		thead.innerHTML = `<tr>${th.join('')}</tr>`;
 		this.table.appendChild(thead);
 		return thead;
+	}
+
+	private makeTableFoot(sets : TableConfig) : HTMLTableSectionElement{
+		let tfoot = document.createElement("tfoot");
+		tfoot.innerHTML = `<tr><td colspan="${sets.columns.length}"></td></td></tr>`;
+		this.table.appendChild(tfoot);
+		return tfoot;
+	}
+
+	private makePagination(opt : PaginationConfig){
+		if(this.tfoot){
+			let td = this.tfoot.querySelector('td');
+			if(td){
+				new Pagination(td , opt)
+			}
+		}
+	}
+
+	action(btnClass:string , action:Function){
+		Helper.delegate(this.tbody , 'click' , btnClass , action);		
 	}
 
 	get selectedData(): null {
