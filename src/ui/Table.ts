@@ -1,5 +1,5 @@
 import { TablePagination } from './Table';
-import { Pagination , PaginationConfig } from './Pagination';
+import { Pagination , PaginationConfig , PageActionObj} from './Pagination';
 import { ListDisplayObject, ListDisplayObjectConfig } from "./ListDisplayObject";
 import { ItemRenderEntry } from "../util/BindList";
 import * as Helper from "../util/Helper";
@@ -47,6 +47,7 @@ export class Table extends ListDisplayObject {
 	thead: HTMLTableSectionElement;
 	tbody: HTMLTableSectionElement;
 	tfoot ?: HTMLTableSectionElement;
+	pageContainer ?: HTMLElement|null;
 	cmd ?: TableCmd;
 	pagination ?: TablePagination;
 
@@ -85,6 +86,7 @@ export class Table extends ListDisplayObject {
 
 
 			this.tfoot = this.makeTableFoot(cfg);
+			this.pageContainer = this.tfoot.querySelector('td');
 
 			let tb = this;
 			this.once(ComponentEvents.ajaxEnd , (ajaxRes : any)=>{
@@ -92,9 +94,9 @@ export class Table extends ListDisplayObject {
 				this.makePagination({
 					size : pageSize ,
 					total : pageValues['total'] as number,
-					action: function(n : number){
-						tb.fetch({
-							page : n
+					action: async function(pageOpt : PageActionObj){
+						await tb.fetch({
+							page : pageOpt.current
 						});
 					}
 				})
@@ -208,10 +210,9 @@ export class Table extends ListDisplayObject {
 	}
 
 	private makePagination(opt : PaginationConfig){
-		if(this.tfoot){
-			let td = this.tfoot.querySelector('td');
-			if(td){
-				new Pagination(td , opt)
+		if(this.pageContainer){
+			if(this.pageContainer){
+				new Pagination(this.pageContainer , opt)
 			}
 		}
 	}

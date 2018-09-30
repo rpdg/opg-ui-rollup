@@ -78,9 +78,9 @@ function internalAction(page :number, pager :Pagination) {
 	}
 	pager.current = page;
 	pager.action({
-		current: pager.current,
-		size: pager.size,
-		total: pager.total
+		current: +pager.current,
+		size: +pager.size,
+		total: +pager.total
 	});
 	build(pager);
 	if (global_config.scrollTop) {
@@ -277,16 +277,25 @@ const global_config: PaginationGlobalConfig = {
 };
 
 export interface PaginationConfig  extends DisplayObjectConfig{
-    action: (page : number)=>void;
+    action: PageAction;
     total: number;
 	size: number;
+}
+
+export type PageActionObj = {
+	current: number,
+	size:number,
+	total:number
+};
+export interface PageAction  {
+	(param:PageActionObj):void;
 }
 
 export class Pagination extends DisplayObject {
 	total: number;
 	current: number;
 	size: number;
-	action: Function;
+	action: PageAction;
 	field: HTMLElement;
 	lists: Item[];
 	hide: boolean;
@@ -297,7 +306,8 @@ export class Pagination extends DisplayObject {
 		this.total = cfg.total || 1;
 		this.size = cfg.size || 1;
 		this.action = cfg.action || noop;
-		this.field = this.dom;
+		this.field = document.createElement('div');
+		this.dom.appendChild(this.field);
 		this.lists = [];
 		this.current = 1;
 		this.hide = false;
