@@ -103,7 +103,7 @@ function createRange(start : number, finish: number, pager :Pagination) {
 			title: global_config.lang === "cn" ? `第${i}页` : `Page ${i}`,
 			liClass: pager.current === i ? global_config.activeClass : "",
 			action(value) {
-				internalAction(value, pager);
+				internalAction(+value, pager);
 			}
 		};
 	};
@@ -204,7 +204,7 @@ function createPreNext(pageCount: number, pager: Pagination, mode: "pre" | "next
 			liClass: disabled ? global_config.disableClass : "",
 			action: function() {
 				if (!disabled) {
-					internalAction(item.page, pager);
+					internalAction(+item.page, pager);
 				}
 			}
 		}
@@ -319,7 +319,7 @@ export class Pagination extends DisplayObject {
 	}
 
 	goToPage(num: number) {
-		internalAction(num, this);
+		internalAction(+num, this);
 	}
 
 }
