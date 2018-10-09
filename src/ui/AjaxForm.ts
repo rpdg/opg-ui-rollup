@@ -1,25 +1,32 @@
-import { AjaxDisplayObject } from "./AjaxDisplayObject";
+import { AjaxDisplayObject, AjaxDisplayObjectConfig } from "./AjaxDisplayObject";
+import { IFormComponent } from "./IComponent";
 
-class AjaxForm extends AjaxDisplayObject {
+type FormValueTypes = "number" | "int" | "string" | "email" | "mobile" | "boolean";
 
-	static recheckDroplist(selectElem: HTMLSelectElement, val: string, byText: boolean = false) :number {
-        let element: HTMLOptionsCollection = selectElem.options;
-        let selectedIndex : number = -1;
-		for (let i = 0, l = element.length; i < l; i++) {
-			let elem: HTMLOptionElement = element[i];
+interface AjaxFormElement {
+	name: string;
+	component?: IFormComponent;
+	require: boolean;
+	spcialChar: boolean;
+	type: FormValueTypes;
+}
 
-			if ((byText ? elem.text : elem.value) === val) {
-                elem.selected = true;
-                selectedIndex = i;
-				break;
-			}
+export interface AjaxFormConfig extends AjaxDisplayObjectConfig {
+	elements: {
+		[EleName: string]: AjaxFormElement;
+	};
+}
 
-			elem.selected = false;
-        }
-        
-        return selectedIndex;
+export class AjaxForm extends AjaxDisplayObject {
+	constructor(dom: HTMLElement, cfg: AjaxFormConfig) {
+		super(dom, cfg);
 	}
-	
+
+	protected bind(data: any) {}
+
+	get data(): any {
+		return null;
+	}
 }
 
 export default AjaxForm;

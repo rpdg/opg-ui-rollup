@@ -76,6 +76,7 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
 
 	protected bind(arr: Array<any>) {
 		super.bind(arr);
+		
 		if(this.prependBlank){
 			arr.unshift(undefined);
 			let elChild :HTMLOptionElement = document.createElement('option');
@@ -97,7 +98,7 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
 		let selectElem: HTMLSelectElement = <HTMLSelectElement>this.dom;
 		let oldIndex = selectElem.selectedIndex;
 		if(oldIndex > -1){
-			let newIndex = AjaxForm.recheckDroplist(selectElem , v , true);
+			let newIndex = ListBox.recheckDroplist(selectElem , v , true);
 			if(newIndex != oldIndex){
 				let event = new Event('change');
 				selectElem.dispatchEvent(event);
@@ -116,7 +117,7 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
 		let selectElem: HTMLSelectElement = <HTMLSelectElement>this.dom;
 		let oldIndex = selectElem.selectedIndex;
 		if(oldIndex > -1){
-			let newIndex = AjaxForm.recheckDroplist(selectElem , v );
+			let newIndex = ListBox.recheckDroplist(selectElem , v , false);
 			if(newIndex != oldIndex){
 				let event = new Event('change');
 				selectElem.dispatchEvent(event);
@@ -130,5 +131,23 @@ export class ListBox extends ListDisplayObject implements IFormComponent {
 			return this._data[i];
 		}
 		return null;
+	}
+
+	static recheckDroplist(selectElem: HTMLSelectElement, val: string, byText: boolean = false) :number {
+        let element: HTMLOptionsCollection = selectElem.options;
+        let selectedIndex : number = -1;
+		for (let i = 0, l = element.length; i < l; i++) {
+			let elem: HTMLOptionElement = element[i];
+
+			if ((byText ? elem.text : elem.value) === val) {
+                elem.selected = true;
+                selectedIndex = i;
+				break;
+			}
+
+			elem.selected = false;
+        }
+        
+        return selectedIndex;
 	}
 }

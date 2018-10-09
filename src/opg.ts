@@ -4,6 +4,7 @@ import { CheckBox , CheckBoxConfig } from './ui/CheckBox';
 import { FormComponentConfig } from './ui/IComponent';
 import { ListBox , ListBoxConfig} from './ui/ListBox';
 import { RadioBox , RadioBoxConfig} from './ui/RadioBox';
+import { AjaxForm , AjaxFormConfig} from './ui/AjaxForm';
 import { Table , TableConfig } from './ui/Table';
 
 
@@ -41,6 +42,10 @@ class OpgUi {
 
 	table(cfg: TableConfig): Table {
 		return new Table(this.dom, cfg);
+	}
+
+	form(cfg: AjaxFormConfig): AjaxForm {
+		return new AjaxForm(this.dom, cfg);
 	}
 
 	span(cfg: any): Span {
